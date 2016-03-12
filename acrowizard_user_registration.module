@@ -1,0 +1,256 @@
+<?php
+
+
+
+
+//echo "Hello World";
+
+//require_once('/sites/all/modules/FirePHPCore/lib/FirePHPCore/fb.PHP');
+//fb($var)
+//fb($var, 'Label')
+//fb($var, FirePHP::[nameofmethod])
+
+
+//dfb('Log message', FirePHP::LOG);
+
+//dfb($input, $label = NULL, $severity = FirePHP::LOG);
+/**
+ * @file
+ * A form module for user registration for downloads of Acrowizard on anvillogic.com. 
+ */
+
+	drupal_add_css(drupal_get_path('module', 'acrowizard_user_registration') . '/acrowizard_user_registration.css', array('group' => CSS_DEFAULT, 'type' => 'file'));
+
+ /**
+ * Implements hook_help. 
+ *
+ * Displays help and module information. 
+ *
+ * @param path  
+ *   Which path of the site we're using to display help 
+ * @param arg  
+ *   Array that holds the current path as returned from arg() function 
+ */
+
+function acrowizard_user_registration_username_alter(&$name, $account) {
+  if($account->name == "admin") {
+    $name = "Private Administrator Account";
+  }
+}
+ 
+ function acrowizard_user_registration_help($path, $arg) {
+	switch ($path) {
+		case "admin/help#acrowizard_user_registration": 
+			return '<p>'.  t("Displays links to nodes to enter user registration information for user who want to download Acrowizard") .'</p>';
+				break;
+	}
+}
+
+
+/**
+ * Implements hook_menu.
+ *  This sets up the page and binds it to a url in drupal 
+ */
+function acrowizard_user_registration_menu() {
+	$items['acrowizard_user_registration'] = array (
+		'title' => 'Acrowizard User Registration Form',
+		'description' => 'Acrowizard User Registration Form',
+		'page callback' => 'drupal_get_form',
+		'page arguments' => array ('acrowizard_user_registration_form'),
+		'access callback' => TRUE,
+	);
+	return $items;
+}
+
+/**
+ * Implements hook_form.
+ *  This creates the fields in the form in drupal 
+ */
+
+ function acrowizard_user_registration_form($form, &$form_state){
+
+
+	$form['name'] = array(
+	'#title' => 'Username',
+	'#description' => 'Choose a username',
+	'#type' => 'textfield',
+	'#required' => TRUE,
+	'#prefix' => wordwrap('<br></br>NOTE: If you have an AcroWizard 2.1 license then <a href="http://www.anvillogic.com/user/login" title="http://www.anvillogic.com/user/login">click here</a> to Login.  Otherwise fill in this form to receive a 30-day fully functional demo of AcroWizard 2.1. We will e-mail our installation instructions and password to you, so please be sure to enter a valid e-mail address.')
+    );
+  $form['mail'] = array(
+	'#title' => 'Email',
+	'#description' => 'Enter a valid email address',
+	'#type' => 'textfield',
+	'#required' => TRUE,
+  '#element_validate' => array('acrowizard_user_registration_email_validate'),
+    );
+		
+	$form['names'] = array(  //creates a fieldset to group name fields
+    '#type' => 'fieldset', 
+    '#title' => t('Name'),
+	'#collapsible' => FALSE, 
+    '#collapsed' => FALSE,
+	);
+	
+	$form['names']['field_fname'] = array(
+	'#title' => 'First Name',
+	'#description' => 'Enter your first name',
+	'#type' => 'textfield',
+	'#required' => TRUE,
+	);
+	$form['names']['field_lname'] = array(
+	'#title' => 'Last Name',
+	'#description' => 'Enter your last name',
+	'#type' => 'textfield',
+	'#required' => TRUE,
+    );
+	
+	$form['field_company'] = array(
+	'#title' => 'Company',
+	'#description' => 'Enter your company name',
+	'#type' => 'textfield',
+    );
+	$form['field_jobtitle'] = array(
+	'#title' => 'Job Title',
+	'#description' => 'Enter your job title',
+	'#type' => 'textfield',
+    );
+	$form['field_workphone'] = array(
+	'#title' => 'Work Phone',
+	'#description' => 'Enter your work phone',
+	'#type' => 'textfield',
+	'#element_validate' => array('acrowizard_user_registration_phone_validate'),    
+    );	
+	$form['send_message'] = array(
+	'#type' => 'checkbox',
+	'#title' => t('Notify user of new account via email.'),
+	'#description' => 'If left unchecked, a message will not be sent.',
+	'#default_value' => 1,
+    );
+	$form['anvil_updates'] = array(
+	'#type' => 'checkbox',
+	'#title' => t('Anvil Updates'),
+	'#description' => 'If you do not want updates, leave unchecked.',
+	'#default_value' => 0,
+    );
+	$form['submit'] = array(
+	'#type' => 'submit',
+	'#value' => t('Save'),
+    );
+	return $form;
+}
+
+/**
+ * Implements hook_form_submit.
+ *  This writes the data to the database in Drupal 
+ */
+
+
+function acrowizard_user_registration_form_submit($form, &$form_state){
+
+//    echo "Hello World";
+//    print_r($form_state);
+//    dfb('Log message', FirePHP::LOG);
+//	die();
+   
+
+   $edit = array(
+	'name' => $form_state['values']['name'],
+	'pass' => user_password(),
+	'mail' => $form_state['values']['mail'],
+	'init' => $form_state['values']['mail'],
+	'status' => 1,
+	'roles' => array(4 => 'acrowizard user'), 
+	'access' => REQUEST_TIME,
+		'field_first_name' => array(LANGUAGE_NONE => array(array('value' =>
+	$form_state['values']['field_fname']))),
+		'field_last_name' => array(LANGUAGE_NONE => array(array('value' =>
+	$form_state['values']['field_lname']))),
+		'field_company' => array(LANGUAGE_NONE => array(array('value' =>
+	$form_state['values']['field_company']))),
+		'field_job_title' => array(LANGUAGE_NONE => array(array('value' =>
+	$form_state['values']['field_jobtitle']))),
+		'field_work_phone' => array(LANGUAGE_NONE => array(array('value' =>
+	$form_state['values']['field_workphone']))),
+	);
+	user_save(drupal_anonymous_user(), $edit);
+	
+/* Setup to send email to user for download
+
+
+	$to = $form_state['values']['mail'];
+	$from = 'support';
+	$subject = 'AcroWizard download and install instructions';
+	$message = 'You are now a member [site:name]
+		<?php
+			print user_pass_reset_url($account);
+		?>
+			The link above will log you in to the site where you can reset your password.
+			After setting your password, you will be able to log in at [site:login-url] in the future using:
+			
+			username: [account:name]
+			password: Your password
+			
+		<html>
+			<body bgcolor="#DCEEFC">
+<!--			<p><font face="Tahoma" size="2">Dear '.$form_state['values']['field_fname'].' '.$form_state['values']['field_lname'].'</font></p>  -->
+				<p><font face="Tahoma" size="2">Thank you for choosing AcroWizard. After you login, you should be redirected to the Acrowizard Download page.  If your not redirected after login, click the link below:<br>
+				<a href="http://www.anvillogic.com/AcrowizardDownload" title="http://www.anvillogic.com/AcrowizardDownload">http://www.anvillogic.com/AcrowizardDownload</a>	<br> </font></p>
+				<p><font face="Tahoma" size="2">The following password will allow you to proceed with the installation. It is recommended that you copy and paste the password.<br>
+				<b>TheWiz@rd0F0Z++</b>
+				<br> </font></p>
+				<p><font face="Tahoma" size="2">Thank you for choosing AcroWizard!<br> </font></p>
+
+<!--   To be implemented once Incident module is developed -->
+<!--   This is commented out 	<p><font face="Tahoma" size="2">The <a href="http://www.anvillogic.com/support/onlinets/" title="http://www.anvillogic.com/support/onlinets/">Technical Support Team</a></font></p>  -->
+<!--   This is commented out -->
+<!--   This is commented out -->
+				</body> 
+		</html>'
+	;
+		
+	
+
+	
+	$headers = "MIME-Version: 1.0\n"; 
+	$headers .= "Content-type: text/html; charset=iso-8859-1\n"; 
+	$headers .= "From: $from \n"; 
+	$headers .= 'From: management@anvillogic.com' . "\r\n";
+	
+	if($form_state['values']['send_message'] == 1){
+		if(mail($to, $subject, $message, $headers, "-f support@anvillogic.com")) {
+//        drupal_set_message(t('Please check your email for download instructions.'));
+		drupal_set_message(t('[account:one-time-login-url]	'));
+		}  
+		else {
+        drupal_set_message(t('failed'));
+		}
+	}
+print token_replace('[account:one-time-login-url]', array('node' => $node));*/
+	
+}
+
+
+/* Validation */
+
+
+function acrowizard_user_registration_phone_validate($element, &$form_state, $form) {
+  if (!$element['#value']) {
+    return;
+  }
+  if (is_numeric($element['#value']) && strlen($element['#value']) == 10) {
+    return;
+  }
+  $element['#value'] = str_replace(array(' ','-','(',')'), '', $element['#value']);
+  if (is_numeric($element['#value']) && strlen($element['#value']) == 10) {
+    return;
+  }
+  form_error($element, t('Enter phone numbers as ten digits with no dashes, parentheses, or spaces.'));
+}
+
+function acrowizard_user_registration_email_validate($element, &$form_state, $form) {
+  if (!valid_email_address($element['#value'])) {
+  form_set_error('submitted][email_address', t('The email address appears to be invalid.'));
+  }
+}
+	  

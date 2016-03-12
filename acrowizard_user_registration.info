@@ -1,0 +1,5 @@
+name = Acrowizard User Registration
+description = A form module for user registration for downloads of Acrowizard on anvillogic.com.
+core = 7.x
+
+stylesheets[all][] = acrowizard_user_registration.css
